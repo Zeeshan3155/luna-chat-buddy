@@ -1,0 +1,21 @@
+# Ignore Python cache
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environment
+venv/
+
+# Ignore IDE-related files
+.idea/
+.vscode/
+
+# Ignore logs & temporary files
+*.log
+*.tmp
+
+
+.huggingface/
+.env
+.ipynb_checkpoints/
+
+
