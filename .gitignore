@@ -13,9 +13,14 @@ venv/
 *.log
 *.tmp
 
-
+# Ignore Hugging Face Spaces cache (if any)
 .huggingface/
+huggingface/
 .env
 .ipynb_checkpoints/
+
+
+# Ignore model
+app/language-tool/*
 
 

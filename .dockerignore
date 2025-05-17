@@ -15,6 +15,7 @@ venv/
 
 # Ignore Hugging Face Spaces cache (if any)
 .huggingface/
+huggingface/
 
 # Ignore environment files
 .env

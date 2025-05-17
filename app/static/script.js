@@ -16,14 +16,16 @@ document.addEventListener("DOMContentLoaded", () => {
             path: 'assets/animations/Animation - 1741897132430.json'
         });
         chatBox.appendChild(typingIndicatorContainer);
+        setTimeout(() => {
         chatBox.scrollTop = chatBox.scrollHeight;
+    }, 100); // adjust timing if needed
     }
 
     function appendMessage(sender, data, changes, isHTML = false) {
         const messageDiv = document.createElement("div");
         messageDiv.classList.add("message-container", sender === "user" ? "user-message" : "bot-message");
 
-        if (isHTML){
+        if (sender==="AI"){
             messageDiv.innerHTML = data;
         }
         else{
@@ -59,6 +61,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         chatBox.appendChild(messageDiv);
         chatBox.scrollTop = chatBox.scrollHeight;
+        tippy('.highlight-error:not([data-tippy-initialized])', {
+          arrow: true,
+          animation: 'elastic',
+          delay: [100, 100],
+          onShow(instance) {
+            instance.reference.setAttribute('data-tippy-initialized', 'true');
+          }
+        });
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -113,40 +123,63 @@ document.addEventListener("DOMContentLoaded", () => {
      async function sendMessage() {
         const message = userInput.value.trim();
         if (message === "") return;
-
-        const grammar_response = await fetch("http://127.0.0.1:7860/grammar", {
+        const grammar_response = await fetch("/grammar", {
                                 method: "POST",
                                 headers: {
                                     "Content-Type": "application/json",
                                 },
-                                body: JSON.stringify({"content": message }),
+                                body: JSON.stringify({
+                                    "text": message
+                                }),
                             });
 
         const grammar_data = await grammar_response.json();
 
         if (grammar_data.changes===true) {
-            appendMessage("user", grammar_data, changes=true);
+            appendMessage(sender="user", data=grammar_data, changes=true, isHTML=true);
         } else {
-            appendMessage("user", grammar_data, changes=false);
+            appendMessage(sender="user", data=grammar_data, changes=false);
         }
 
         loadLottieAnimation()
         try {
-            const response = await fetch("http://127.0.0.1:7860/chat", {
+            const chat_response = await fetch("/chat", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({"content": message }),
+                body: JSON.stringify({"text": message }),
             });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! Status: ${response.status}`);
+            if (!chat_response.ok) {
+                throw new Error(`HTTP error! Status: ${chat_response.status}`);
             }
-            const bot_data = await response.json();
-            const audioURL = "http://127.0.0.1:7860/assets/output.mp3";
-            const audio = new Audio(audioURL);
-            audio.play().catch(error => console.error("Playback error:", error));
+            const bot_data = await chat_response.json();
+
+            try {
+                const audio_response = await fetch("/get_audio", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "file_name": bot_data.file_name })
+                });
+                if (!audio_response.ok) {
+                    throw new Error("Failed to fetch audio");
+                }
+                const audioBlob = await audio_response.blob();
+                const audioURL = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioURL);
+                audio.play();
+
+                audio.onended = async () => {
+                    await fetch("/delete_audio", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ "file_name": bot_data.file_name })
+                });
+                    };
+            } catch (error) {
+                console.error("Error playing audio:", error);
+            };
 
             document.querySelector(".typing-anim").remove();
 
@@ -159,10 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
         userInput.value = "";
     }
 
-    // Send message on button click
     sendBtn.addEventListener("click", sendMessage);
 
-    // Send message on Enter key press
     userInput.addEventListener("keypress", (event) => {
         if (event.key === "Enter") sendMessage();
     });

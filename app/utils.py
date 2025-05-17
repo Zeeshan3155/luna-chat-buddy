@@ -4,16 +4,13 @@ import re
 import edge_tts
 import io
 from dotenv import load_dotenv
+import uuid
 
 
 class TextProcessor:
     def __init__(self):
         load_dotenv()
-        self.url = "https://api.languagetoolplus.com/v2/check"
-        self.sapling_api_key = os.getenv("sapling_API_KEY")
-        self.message_counter = 0
-        self.messages = []
-        self.correct_message = []
+        self.url = "http://localhost:8081/v2/check"
         self.emoji_pattern = re.compile(
             u'['
             u'\U0001F600-\U0001F64F'  # emoticons
@@ -38,7 +35,8 @@ class TextProcessor:
         data = await self.text_to_speech(clean_text)
         return data
 
-    async def text_to_speech(self, text):
+    @staticmethod
+    async def text_to_speech(text):
         try:
             # Generate speech using edge_tts
             tts = edge_tts.Communicate(text, "en-US-AvaNeural")
@@ -48,61 +46,15 @@ class TextProcessor:
                     audio_stream.write(chunk["data"])
 
             audio_stream.seek(0)
-            BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-            file_path = os.path.join(BASE_DIR, "assets", "output.mp3")
+            unique_file_name = f"output_{uuid.uuid4().hex}.mp3"
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            file_path = os.path.join(base_dir, "assets", unique_file_name)
 
             with open(file_path, "wb") as f:
                 f.write(audio_stream.getvalue())
-            return {"file_path": file_path}
+            return {"file_name": unique_file_name}
         except Exception as e:
-            return None
-
-    def append_message(self, text):
-        self.messages.append(text)
-
-    def sapling_api(self, text):
-        try:
-            response = requests.post(
-                "https://api.sapling.ai/api/v1/edits",
-                json={
-                    "key": self.sapling_api_key,
-                    "text": text,
-                    "session_id": "test session",
-                    "auto_apply": True,
-                }
-            )
-            text_html = text
-            resp_json = response.json()
-            if 200 <= response.status_code < 300:
-                if resp_json["edits"]:
-                    for matches in sorted(resp_json["edits"], key=lambda x: x["start"], reverse=True):
-                        start = matches["start"]
-                        end = matches["end"]
-
-                        text_html = (
-                                text_html[:start] +
-                                "<span class='highlight-error'>" + text_html[start:end] + "</span>" +
-                                text_html[end:]
-                        )
-                    corrected_text = resp_json["applied_text"]
-                    data = {
-                        "text_html": text_html,
-                        "corrected_text": corrected_text,
-                        "changes": True
-                    }
-
-                    return data
-                else:
-                    data = {
-                        "corrected_text": text,
-                        "changes": False
-                    }
-                    return data
-
-            else:
-                print("Error: ", resp_json)
-        except Exception as e:
-            print("Error: ", e)
+            return {"error": str(e)}
 
     def language_tool(self, text):
         data = {
@@ -113,7 +65,8 @@ class TextProcessor:
         text_html = text
 
         try:
-            response = requests.post(url=self.url, data=data).json()
+            headers = {"Content-Type": "application/x-www-form-urlencoded"}
+            response = requests.post(url=self.url, data=data, headers=headers).json()
             if not response["matches"]:
                 data = {
                     "corrected_text": text,
@@ -127,7 +80,8 @@ class TextProcessor:
                         text[:start] + matches["replacements"][0]["value"] + text[end:]
                 )
                 text_html = (
-                        text_html[:start] + "<span class='highlight-error'>" +
+                        text_html[:start] + f"<span class='highlight-error' data-tippy-content='{matches['message']}'>"
+                        +
                         text_html[start: end]
                         + "</span>" + text_html[end:]
                 )
@@ -141,19 +95,3 @@ class TextProcessor:
         except Exception as e:
             print(f"Error with the LanguageTool API request: {e}")
             return "Error checking sentence. Please try again later."
-
-    def check_sentences(self):
-        while True:
-            if self.messages:
-                text = self.messages.pop(0)
-                self.message_counter += 1
-                if self.message_counter % 2 == 1:
-                    data = self.language_tool(text)
-                    return data
-
-                else:
-                    data = self.sapling_api(text)
-                    return data
-
-            else:
-                break

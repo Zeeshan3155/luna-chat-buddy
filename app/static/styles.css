@@ -1,3 +1,15 @@
+:root {
+    --background-color: linear-gradient(125deg, #d4ecfa 50%, #f4fdfc 50%);
+    --primary-color: #4DB6AC;
+    --title-shadow: 2px 5px 0px rgba(77, 182, 172, 0.3);
+    --bot-bubble-color: #f8f7ff;
+    --user-bubble-color: #e0f2f1;
+    --text-color: #263238;
+    --input-box-color: #f1f1f1;
+    --button-hover-color: #00796B;
+}
+
+
 html, body {
       margin: 0;
       padding: 0;
@@ -7,7 +19,7 @@ html, body {
 
 body {
     font-family: "Lato", sans-serif;;
-    background-color: #ecdcfe;
+    background: var(--background-color);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -33,7 +45,6 @@ body {
 /* <-----HEADER-----> */
 
 #header {
-    color: white;
     position: relative;
     width: 100%;
     height: auto;
@@ -46,15 +57,6 @@ body {
     justify-content: left;
     align-items: center;
     gap: 20px;
-}
-
-#wave {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: auto;
-    z-index: -1;
 }
 
 .logo {
@@ -70,19 +72,19 @@ body {
 
 .title {
     font-family: "Allura", cursive;
+    color: var(--primary-color);
     font-size: 4rem;
     font-weight: bold;
     margin: 0;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    text-shadow: var(--title-shadow);
 }
 
-.subtitle {
-    font-size: 1rem;
-    opacity: 0.9;
-}
 
 .subtitle {
     overflow: hidden;
+    color: var(--primary-color);
+    font-size: 1rem;
+    opacity: 0.9;
     border-right: .15em solid orange;
     white-space: nowrap;
     letter-spacing: .15em;
@@ -117,17 +119,13 @@ body {
     #header {
         height: auto;
     }
-
-    .subtitle {
-        color: #8F00FF;
-    }
 }
 
 /* <-----CHAT CONTAINER-----> */
 
 .chat-container {
     width: 350px;
-    background: white;
+    backdrop-filter: blur(5px);
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     overflow: hidden;
@@ -140,7 +138,7 @@ body {
     box-shadow: 0 5px 15px 0px rgba(0, 0, 0, 0.2);
     display: flex;
     align-items: center;
-    background-color: #8F00FF;
+    background-color: var(--primary-color);
     color: white;
     padding: 10px;
     text-align: center;
@@ -149,7 +147,6 @@ body {
 }
 
 .image-container {
-    background: #B75CFF;
     border-radius: 50%;
     height: 40px;
     width: 40px;
@@ -206,8 +203,8 @@ body {
 }
 
 .message {
-    background: #f2ebfb;
-    color: #343a40;
+    background: var(--user-bubble-color);
+    color: var(--text-color);
     padding: 10px 15px;
     border-radius: 20px 20px 1px 20px;
     box-shadow: 4px 4px 6px 0px lightgray;
@@ -225,8 +222,8 @@ body {
 }
 
 .bot-message p {
-    background: #B75CFF;
-    color: #fffcf2;
+    background: var(--bot-bubble-color);
+    color: var(--text-color);
     padding: 10px 15px;
     border-radius: 20px 20px 20px 1px;
     box-shadow: 4px 4px 6px 0px lightgray;
@@ -263,10 +260,12 @@ body {
 .input-container {
     display: flex;
     padding: 10px;
-    background: white;
+    background: var(--input-box-color);
 }
 
 input {
+    background: var(--input-box-color);
+    color: var(--text-color);
     flex: 1;
     padding: 10px;
     border: 1px solid #ccc;
@@ -275,7 +274,7 @@ input {
 }
 
 .input-btn {
-    background-color: #8F00FF;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     width: 40px;
@@ -291,7 +290,7 @@ input {
     transform: scale(1.1);
     transition: transform 0.3s ease;
     box-shadow: 0 0 4px 3px lightgrey;
-    background-color: #491a74;
+    background-color: var(--button-hover-color);
 }
 
 .action-btn {
@@ -337,6 +336,18 @@ input {
 
 .highlight-error {
     color: #dc2f02;
+    cursor: pointer;
+}
+
+.tippy-box[data-animation='elastic'][data-state='hidden'] {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.tippy-box[data-animation='elastic'][data-state='visible'] {
+  opacity: 1;
+  transform: scale(1);
+  transition: transform 0.5s cubic-bezier(0.6, 1.9, 0.75, 0.95), opacity 0.3s ease;
 }
 
 @media (max-width: 768px) {
@@ -369,7 +380,7 @@ input {
 }
 
 #footer a {
-    color: #8F00FF;
+    color: var(--primary-color);
 }
 
 #footer .social-media {
@@ -383,7 +394,7 @@ input {
 
 #footer .social-media a {
     margin-left: 5px;
-    color: #8F00FF;
+    color: var(--primary-color);
 }
 
 #footer .social-media a:hover {
